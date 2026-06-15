@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+nutrient_report.txt
+risk_results.csv
+risk_plot.png
