@@ -1,5 +1,6 @@
 import csv
 import random
+import matplotlib.pyplot as plt
 
 
 def get_risk_label(score):
@@ -52,9 +53,7 @@ def generate_person():
     food_access = random.randint(1, 5)
     supplements = random.choice(["yes", "no"])
 
-    iron, b12, zinc = calculate_risk(
-        age, vegetables, meat, dairy, food_access, supplements
-    )
+    iron, b12, zinc = calculate_risk(age, vegetables, meat, dairy, food_access, supplements)
 
     return {
         "age": age,
@@ -73,46 +72,81 @@ def generate_person():
 
 
 def generate_population(size):
-    population = []
-
-    for _ in range(size):
-        person = generate_person()
-        population.append(person)
-
-    return population
+    return [generate_person() for _ in range(size)]
 
 
 def save_population_csv(population):
     with open("synthetic_population.csv", "w", newline="") as file:
-        fieldnames = [
-            "age",
-            "vegetables_per_day",
-            "meat_per_week",
-            "dairy_per_week",
-            "food_access",
-            "supplements",
-            "iron_score",
-            "iron_risk",
-            "b12_score",
-            "b12_risk",
-            "zinc_score",
-            "zinc_risk"
-        ]
-
+        fieldnames = list(population[0].keys())
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(population)
 
 
-def count_high_risk(population, nutrient):
+def summarize_risk_levels(population, nutrient):
     risk_key = nutrient + "_risk"
-    count = 0
+
+    summary = {
+        "High": 0,
+        "Moderate": 0,
+        "Low": 0
+    }
 
     for person in population:
-        if person[risk_key] == "High":
-            count += 1
+        summary[person[risk_key]] += 1
 
-    return count
+    return summary
+
+
+def save_dashboard_report(population, summaries):
+    with open("community_dashboard_report.txt", "w") as file:
+        file.write("HOPEResearch Community Nutrient Risk Dashboard\n")
+        file.write("---------------------------------------------\n\n")
+        file.write(f"Population size: {len(population)}\n\n")
+
+        for nutrient, summary in summaries.items():
+            file.write(nutrient.title() + " Deficiency Risk:\n")
+            file.write(f"High Risk: {summary['High']}\n")
+            file.write(f"Moderate Risk: {summary['Moderate']}\n")
+            file.write(f"Low Risk: {summary['Low']}\n\n")
+
+
+def save_dashboard_csv(summaries):
+    with open("community_dashboard.csv", "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["nutrient", "risk_level", "count"])
+
+        for nutrient, summary in summaries.items():
+            for risk_level, count in summary.items():
+                writer.writerow([nutrient, risk_level, count])
+
+
+def save_dashboard_plot(summaries):
+    nutrients = list(summaries.keys())
+    high_counts = [summaries[nutrient]["High"] for nutrient in nutrients]
+    moderate_counts = [summaries[nutrient]["Moderate"] for nutrient in nutrients]
+    low_counts = [summaries[nutrient]["Low"] for nutrient in nutrients]
+
+    x_positions = range(len(nutrients))
+
+    plt.figure(figsize=(9, 5))
+    plt.bar(x_positions, high_counts, label="High")
+    plt.bar(x_positions, moderate_counts, bottom=high_counts, label="Moderate")
+
+    low_bottoms = [
+        high_counts[i] + moderate_counts[i]
+        for i in range(len(nutrients))
+    ]
+
+    plt.bar(x_positions, low_counts, bottom=low_bottoms, label="Low")
+
+    plt.title("Community Nutrient Risk Distribution")
+    plt.xlabel("Nutrient")
+    plt.ylabel("Number of Individuals")
+    plt.xticks(x_positions, [nutrient.title() for nutrient in nutrients])
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("community_dashboard_plot.png")
 
 
 population_size = 1000
@@ -120,14 +154,27 @@ population = generate_population(population_size)
 
 save_population_csv(population)
 
-iron_high = count_high_risk(population, "iron")
-b12_high = count_high_risk(population, "b12")
-zinc_high = count_high_risk(population, "zinc")
+summaries = {
+    "iron": summarize_risk_levels(population, "iron"),
+    "b12": summarize_risk_levels(population, "b12"),
+    "zinc": summarize_risk_levels(population, "zinc")
+}
 
-print("HOPEResearch Synthetic Population Analysis")
-print("-----------------------------------------")
+print("HOPEResearch Community Nutrient Risk Dashboard")
+print("---------------------------------------------")
 print("Population size:", population_size)
-print("High Iron Risk:", iron_high)
-print("High Vitamin B12 Risk:", b12_high)
-print("High Zinc Risk:", zinc_high)
+
+for nutrient, summary in summaries.items():
+    print(f"\n{nutrient.title()} Deficiency Risk:")
+    print("High Risk:", summary["High"])
+    print("Moderate Risk:", summary["Moderate"])
+    print("Low Risk:", summary["Low"])
+
+save_dashboard_report(population, summaries)
+save_dashboard_csv(summaries)
+save_dashboard_plot(summaries)
+
 print("\nDataset saved to synthetic_population.csv")
+print("Dashboard report saved to community_dashboard_report.txt")
+print("Dashboard CSV saved to community_dashboard.csv")
+print("Dashboard plot saved to community_dashboard_plot.png")
