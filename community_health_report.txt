@@ -1,0 +1,29 @@
+HOPEResearch Community Health Report
+-----------------------------------
+
+Population analyzed: 5
+
+Important Disclaimer:
+This report is an educational screening prototype, not a medical diagnosis tool.
+
+IRON Deficiency Risk
+- High: 2 (40.0%)
+- Moderate: 1 (20.0%)
+- Low: 2 (40.0%)
+Key Finding: High-risk prevalence is elevated and should be prioritized.
+Recommended Outreach: Focused nutrition education and food-support interventions.
+
+B12 Deficiency Risk
+- High: 2 (40.0%)
+- Moderate: 1 (20.0%)
+- Low: 2 (40.0%)
+Key Finding: High-risk prevalence is elevated and should be prioritized.
+Recommended Outreach: Focused nutrition education and food-support interventions.
+
+ZINC Deficiency Risk
+- High: 2 (40.0%)
+- Moderate: 1 (20.0%)
+- Low: 2 (40.0%)
+Key Finding: High-risk prevalence is elevated and should be prioritized.
+Recommended Outreach: Focused nutrition education and food-support interventions.
+

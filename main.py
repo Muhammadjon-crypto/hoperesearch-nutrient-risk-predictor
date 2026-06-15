@@ -241,6 +241,47 @@ def generate_community_intervention_plan():
             print("Recommended action: low immediate priority.")
 
 
+def generate_community_health_report():
+    filename = input("Enter analyzed CSV filename: ")
+    data = pd.read_csv(filename)
+
+    report_filename = "community_health_report.txt"
+
+    with open(report_filename, "w") as file:
+        file.write("HOPEResearch Community Health Report\n")
+        file.write("-----------------------------------\n\n")
+        file.write(f"Population analyzed: {len(data)}\n\n")
+        file.write("Important Disclaimer:\n")
+        file.write("This report is an educational screening prototype, not a medical diagnosis tool.\n\n")
+
+        for nutrient in ["iron", "b12", "zinc"]:
+            counts = data[f"{nutrient}_risk"].value_counts()
+            high = counts.get("High", 0)
+            moderate = counts.get("Moderate", 0)
+            low = counts.get("Low", 0)
+
+            high_percent = round((high / len(data)) * 100, 1)
+            moderate_percent = round((moderate / len(data)) * 100, 1)
+            low_percent = round((low / len(data)) * 100, 1)
+
+            file.write(f"{nutrient.upper()} Deficiency Risk\n")
+            file.write(f"- High: {high} ({high_percent}%)\n")
+            file.write(f"- Moderate: {moderate} ({moderate_percent}%)\n")
+            file.write(f"- Low: {low} ({low_percent}%)\n")
+
+            if high_percent >= 20:
+                file.write("Key Finding: High-risk prevalence is elevated and should be prioritized.\n")
+                file.write("Recommended Outreach: Focused nutrition education and food-support interventions.\n\n")
+            elif high_percent >= 10:
+                file.write("Key Finding: Moderate concern level detected.\n")
+                file.write("Recommended Outreach: Include this nutrient in educational materials.\n\n")
+            else:
+                file.write("Key Finding: Lower immediate concern based on current survey data.\n")
+                file.write("Recommended Outreach: Continue monitoring.\n\n")
+
+    print(f"Community health report saved to {report_filename}")
+
+
 def main():
     while True:
         print("\nHOPEResearch Platform")
@@ -251,7 +292,8 @@ def main():
         print("4. Train ML models")
         print("5. Predict individual nutrient risk")
         print("6. Generate community intervention plan")
-        print("7. Exit")
+        print("7. Generate community health report")
+        print("8. Exit")
 
         choice = input("Choose an option: ")
 
@@ -268,6 +310,8 @@ def main():
         elif choice == "6":
             generate_community_intervention_plan()
         elif choice == "7":
+            generate_community_health_report()
+        elif choice == "8":
             print("Exiting HOPEResearch Platform.")
             break
         else:
