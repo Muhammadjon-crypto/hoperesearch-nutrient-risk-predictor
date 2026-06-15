@@ -3,7 +3,7 @@ import random
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 
 
 def get_risk_label(score):
@@ -61,12 +61,7 @@ def generate_person():
     supplements = random.choice([0, 1])
 
     iron_risk, b12_risk, zinc_risk = calculate_risks(
-        age,
-        vegetables,
-        meat,
-        dairy,
-        food_access,
-        supplements
+        age, vegetables, meat, dairy, food_access, supplements
     )
 
     return {
@@ -86,8 +81,7 @@ def generate_dataset(size):
     people = [generate_person() for _ in range(size)]
 
     with open("synthetic_population.csv", "w", newline="") as file:
-        fieldnames = people[0].keys()
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer = csv.DictWriter(file, fieldnames=people[0].keys())
         writer.writeheader()
         writer.writerows(people)
 
@@ -113,28 +107,62 @@ def train_model(data, target_column):
         random_state=42
     )
 
-    model = DecisionTreeClassifier(random_state=42)
+    model = DecisionTreeClassifier(random_state=42, max_depth=5)
     model.fit(X_train, y_train)
 
     predictions = model.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
+    report = classification_report(y_test, predictions, zero_division=0)
 
-    return model, accuracy
+    return model, accuracy, report
+
+
+def save_model_report(accuracies, reports):
+    with open("model_performance_report.txt", "w") as file:
+        file.write("HOPEResearch ML Model Performance Report\n")
+        file.write("----------------------------------------\n\n")
+        file.write("Important Disclaimer:\n")
+        file.write(
+            "This is an educational prototype trained on synthetic, rule-generated data. "
+            "It is not a diagnostic medical tool and should not be used for clinical decisions.\n\n"
+        )
+
+        for nutrient, accuracy in accuracies.items():
+            file.write(f"{nutrient} Model Accuracy: {round(accuracy * 100, 2)}%\n")
+            file.write("Classification Report:\n")
+            file.write(reports[nutrient])
+            file.write("\n\n")
 
 
 generate_dataset(1000)
 
 data = pd.read_csv("synthetic_population.csv")
 
-iron_model, iron_accuracy = train_model(data, "iron_risk")
-b12_model, b12_accuracy = train_model(data, "b12_risk")
-zinc_model, zinc_accuracy = train_model(data, "zinc_risk")
+iron_model, iron_accuracy, iron_report = train_model(data, "iron_risk")
+b12_model, b12_accuracy, b12_report = train_model(data, "b12_risk")
+zinc_model, zinc_accuracy, zinc_report = train_model(data, "zinc_risk")
+
+accuracies = {
+    "Iron": iron_accuracy,
+    "Vitamin B12": b12_accuracy,
+    "Zinc": zinc_accuracy
+}
+
+reports = {
+    "Iron": iron_report,
+    "Vitamin B12": b12_report,
+    "Zinc": zinc_report
+}
+
+save_model_report(accuracies, reports)
 
 print("HOPEResearch Multi-Nutrient ML Risk Predictor")
 print("---------------------------------------------")
-print("Iron Model Accuracy:", round(iron_accuracy * 100, 2), "%")
-print("Vitamin B12 Model Accuracy:", round(b12_accuracy * 100, 2), "%")
-print("Zinc Model Accuracy:", round(zinc_accuracy * 100, 2), "%")
+print("Educational prototype trained on synthetic data.")
+print("Not for medical diagnosis.\n")
+
+for nutrient, accuracy in accuracies.items():
+    print(f"{nutrient} Model Accuracy:", round(accuracy * 100, 2), "%")
 
 example_person = pd.DataFrame([
     {
@@ -147,12 +175,10 @@ example_person = pd.DataFrame([
     }
 ])
 
-iron_prediction = iron_model.predict(example_person)[0]
-b12_prediction = b12_model.predict(example_person)[0]
-zinc_prediction = zinc_model.predict(example_person)[0]
-
 print("\nExample Prediction")
 print("------------------")
-print("Predicted Iron Risk:", iron_prediction)
-print("Predicted Vitamin B12 Risk:", b12_prediction)
-print("Predicted Zinc Risk:", zinc_prediction)
+print("Predicted Iron Risk:", iron_model.predict(example_person)[0])
+print("Predicted Vitamin B12 Risk:", b12_model.predict(example_person)[0])
+print("Predicted Zinc Risk:", zinc_model.predict(example_person)[0])
+
+print("\nModel performance report saved to model_performance_report.txt")
