@@ -1,6 +1,9 @@
 import csv
 import random
-import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
 
 
 def get_risk_label(score):
@@ -14,35 +17,23 @@ def get_risk_label(score):
 
 def calculate_risk(age, vegetables, meat, dairy, food_access, supplements):
     iron_risk = 0
-    b12_risk = 0
-    zinc_risk = 0
 
     if vegetables < 3:
         iron_risk += 2
 
     if meat < 2:
         iron_risk += 1
-        b12_risk += 3
-        zinc_risk += 2
-
-    if dairy < 2:
-        b12_risk += 1
 
     if food_access <= 2:
         iron_risk += 2
-        b12_risk += 1
-        zinc_risk += 2
 
-    if supplements == "no":
+    if supplements == 0:
         iron_risk += 1
-        b12_risk += 1
-        zinc_risk += 1
 
     if age < 12:
         iron_risk += 1
-        zinc_risk += 1
 
-    return iron_risk, b12_risk, zinc_risk
+    return get_risk_label(iron_risk)
 
 
 def generate_person():
@@ -51,9 +42,9 @@ def generate_person():
     meat = random.randint(0, 7)
     dairy = random.randint(0, 7)
     food_access = random.randint(1, 5)
-    supplements = random.choice(["yes", "no"])
+    supplements = random.choice([0, 1])
 
-    iron, b12, zinc = calculate_risk(age, vegetables, meat, dairy, food_access, supplements)
+    iron_risk = calculate_risk(age, vegetables, meat, dairy, food_access, supplements)
 
     return {
         "age": age,
@@ -62,119 +53,69 @@ def generate_person():
         "dairy_per_week": dairy,
         "food_access": food_access,
         "supplements": supplements,
-        "iron_score": iron,
-        "iron_risk": get_risk_label(iron),
-        "b12_score": b12,
-        "b12_risk": get_risk_label(b12),
-        "zinc_score": zinc,
-        "zinc_risk": get_risk_label(zinc)
+        "iron_risk": iron_risk
     }
 
 
-def generate_population(size):
-    return [generate_person() for _ in range(size)]
+def generate_dataset(size):
+    people = [generate_person() for _ in range(size)]
 
-
-def save_population_csv(population):
     with open("synthetic_population.csv", "w", newline="") as file:
-        fieldnames = list(population[0].keys())
+        fieldnames = people[0].keys()
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(population)
+        writer.writerows(people)
 
 
-def summarize_risk_levels(population, nutrient):
-    risk_key = nutrient + "_risk"
+generate_dataset(1000)
 
-    summary = {
-        "High": 0,
-        "Moderate": 0,
-        "Low": 0
-    }
+data = pd.read_csv("synthetic_population.csv")
 
-    for person in population:
-        summary[person[risk_key]] += 1
-
-    return summary
-
-
-def save_dashboard_report(population, summaries):
-    with open("community_dashboard_report.txt", "w") as file:
-        file.write("HOPEResearch Community Nutrient Risk Dashboard\n")
-        file.write("---------------------------------------------\n\n")
-        file.write(f"Population size: {len(population)}\n\n")
-
-        for nutrient, summary in summaries.items():
-            file.write(nutrient.title() + " Deficiency Risk:\n")
-            file.write(f"High Risk: {summary['High']}\n")
-            file.write(f"Moderate Risk: {summary['Moderate']}\n")
-            file.write(f"Low Risk: {summary['Low']}\n\n")
-
-
-def save_dashboard_csv(summaries):
-    with open("community_dashboard.csv", "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["nutrient", "risk_level", "count"])
-
-        for nutrient, summary in summaries.items():
-            for risk_level, count in summary.items():
-                writer.writerow([nutrient, risk_level, count])
-
-
-def save_dashboard_plot(summaries):
-    nutrients = list(summaries.keys())
-    high_counts = [summaries[nutrient]["High"] for nutrient in nutrients]
-    moderate_counts = [summaries[nutrient]["Moderate"] for nutrient in nutrients]
-    low_counts = [summaries[nutrient]["Low"] for nutrient in nutrients]
-
-    x_positions = range(len(nutrients))
-
-    plt.figure(figsize=(9, 5))
-    plt.bar(x_positions, high_counts, label="High")
-    plt.bar(x_positions, moderate_counts, bottom=high_counts, label="Moderate")
-
-    low_bottoms = [
-        high_counts[i] + moderate_counts[i]
-        for i in range(len(nutrients))
+features = data[
+    [
+        "age",
+        "vegetables_per_day",
+        "meat_per_week",
+        "dairy_per_week",
+        "food_access",
+        "supplements"
     ]
+]
 
-    plt.bar(x_positions, low_counts, bottom=low_bottoms, label="Low")
+target = data["iron_risk"]
 
-    plt.title("Community Nutrient Risk Distribution")
-    plt.xlabel("Nutrient")
-    plt.ylabel("Number of Individuals")
-    plt.xticks(x_positions, [nutrient.title() for nutrient in nutrients])
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig("community_dashboard_plot.png")
+X_train, X_test, y_train, y_test = train_test_split(
+    features,
+    target,
+    test_size=0.2,
+    random_state=42
+)
 
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)
 
-population_size = 1000
-population = generate_population(population_size)
+predictions = model.predict(X_test)
 
-save_population_csv(population)
+accuracy = accuracy_score(y_test, predictions)
 
-summaries = {
-    "iron": summarize_risk_levels(population, "iron"),
-    "b12": summarize_risk_levels(population, "b12"),
-    "zinc": summarize_risk_levels(population, "zinc")
-}
+print("HOPEResearch Machine Learning Nutrient Risk Predictor")
+print("----------------------------------------------------")
+print("Model trained to predict iron deficiency risk")
+print("Accuracy:", round(accuracy * 100, 2), "%")
 
-print("HOPEResearch Community Nutrient Risk Dashboard")
-print("---------------------------------------------")
-print("Population size:", population_size)
+example_person = pd.DataFrame([
+    {
+        "age": 10,
+        "vegetables_per_day": 1,
+        "meat_per_week": 0,
+        "dairy_per_week": 1,
+        "food_access": 2,
+        "supplements": 0
+    }
+])
 
-for nutrient, summary in summaries.items():
-    print(f"\n{nutrient.title()} Deficiency Risk:")
-    print("High Risk:", summary["High"])
-    print("Moderate Risk:", summary["Moderate"])
-    print("Low Risk:", summary["Low"])
+prediction = model.predict(example_person)
 
-save_dashboard_report(population, summaries)
-save_dashboard_csv(summaries)
-save_dashboard_plot(summaries)
-
-print("\nDataset saved to synthetic_population.csv")
-print("Dashboard report saved to community_dashboard_report.txt")
-print("Dashboard CSV saved to community_dashboard.csv")
-print("Dashboard plot saved to community_dashboard_plot.png")
+print("\nExample Prediction")
+print("------------------")
+print("Predicted Iron Risk:", prediction[0])
