@@ -56,8 +56,32 @@ def calculate_risks(age, vegetables, meat, dairy, food_access, supplements):
     return {
         "iron_risk": get_risk_label(iron_score),
         "b12_risk": get_risk_label(b12_score),
-        "zinc_risk": get_risk_label(zinc_score)
+        "zinc_risk": get_risk_label(zinc_score),
     }
+
+
+def generate_interventions(risks):
+    interventions = []
+
+    if risks["iron_risk"] == "High":
+        interventions.append("Iron: prioritize beans, spinach, fortified cereals, lean meats, and vitamin C pairing.")
+    elif risks["iron_risk"] == "Moderate":
+        interventions.append("Iron: increase weekly iron-rich meals and monitor intake.")
+
+    if risks["b12_risk"] == "High":
+        interventions.append("B12: consider eggs, dairy, fish, meat, fortified foods, or professional guidance on supplementation.")
+    elif risks["b12_risk"] == "Moderate":
+        interventions.append("B12: monitor animal-source or fortified-food intake.")
+
+    if risks["zinc_risk"] == "High":
+        interventions.append("Zinc: prioritize beans, nuts, seeds, whole grains, meat, and fortified cereals.")
+    elif risks["zinc_risk"] == "Moderate":
+        interventions.append("Zinc: add more zinc-containing foods throughout the week.")
+
+    if not interventions:
+        interventions.append("Overall: current estimated risk is low. Maintain dietary variety.")
+
+    return interventions
 
 
 def generate_person():
@@ -77,7 +101,7 @@ def generate_person():
         "dairy_per_week": dairy,
         "food_access": food_access,
         "supplements": supplements,
-        **risks
+        **risks,
     }
 
 
@@ -95,7 +119,6 @@ def generate_synthetic_population():
 
 def analyze_survey_data():
     filename = input("Enter survey CSV filename: ")
-
     data = pd.read_csv(filename)
 
     risk_results = data.apply(
@@ -106,10 +129,10 @@ def analyze_survey_data():
                 row["meat_per_week"],
                 row["dairy_per_week"],
                 row["food_access"],
-                row["supplements"]
+                row["supplements"],
             )
         ),
-        axis=1
+        axis=1,
     )
 
     final_data = pd.concat([data, risk_results], axis=1)
@@ -148,7 +171,7 @@ def train_ml_models():
             "meat_per_week",
             "dairy_per_week",
             "food_access",
-            "supplements"
+            "supplements",
         ]
     ]
 
@@ -156,10 +179,7 @@ def train_ml_models():
         target = data[target_column]
 
         X_train, X_test, y_train, y_test = train_test_split(
-            features,
-            target,
-            test_size=0.2,
-            random_state=42
+            features, target, test_size=0.2, random_state=42
         )
 
         model = DecisionTreeClassifier(random_state=42, max_depth=5)
@@ -182,13 +202,43 @@ def predict_individual_risk():
     supplements = int(input("Supplements? 1 for yes, 0 for no: "))
 
     risks = calculate_risks(age, vegetables, meat, dairy, food_access, supplements)
+    interventions = generate_interventions(risks)
 
     print("\nIndividual Nutrient Risk Prediction")
     print("-----------------------------------")
     print("Iron Risk:", risks["iron_risk"])
     print("Vitamin B12 Risk:", risks["b12_risk"])
     print("Zinc Risk:", risks["zinc_risk"])
+
+    print("\nSuggested Interventions")
+    print("-----------------------")
+    for intervention in interventions:
+        print("-", intervention)
+
     print("\nDisclaimer: Educational screening only. Not medical diagnosis.")
+
+
+def generate_community_intervention_plan():
+    filename = input("Enter analyzed CSV filename: ")
+    data = pd.read_csv(filename)
+
+    print("\nHOPEResearch Community Intervention Plan")
+    print("----------------------------------------")
+
+    for nutrient in ["iron", "b12", "zinc"]:
+        high_count = (data[f"{nutrient}_risk"] == "High").sum()
+        moderate_count = (data[f"{nutrient}_risk"] == "Moderate").sum()
+
+        print(f"\n{nutrient.upper()}")
+        print("High risk individuals:", high_count)
+        print("Moderate risk individuals:", moderate_count)
+
+        if high_count >= 10:
+            print("Recommended action: prioritize this nutrient in the next outreach campaign.")
+        elif high_count >= 3:
+            print("Recommended action: monitor and include targeted educational materials.")
+        else:
+            print("Recommended action: low immediate priority.")
 
 
 def main():
@@ -200,7 +250,8 @@ def main():
         print("3. Community dashboard")
         print("4. Train ML models")
         print("5. Predict individual nutrient risk")
-        print("6. Exit")
+        print("6. Generate community intervention plan")
+        print("7. Exit")
 
         choice = input("Choose an option: ")
 
@@ -215,6 +266,8 @@ def main():
         elif choice == "5":
             predict_individual_risk()
         elif choice == "6":
+            generate_community_intervention_plan()
+        elif choice == "7":
             print("Exiting HOPEResearch Platform.")
             break
         else:
