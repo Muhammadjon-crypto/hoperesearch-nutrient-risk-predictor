@@ -1,3 +1,7 @@
+import csv
+import random
+
+
 def get_risk_label(score):
     if score >= 5:
         return "High"
@@ -37,88 +41,93 @@ def calculate_risk(age, vegetables, meat, dairy, food_access, supplements):
         iron_risk += 1
         zinc_risk += 1
 
+    return iron_risk, b12_risk, zinc_risk
+
+
+def generate_person():
+    age = random.randint(5, 18)
+    vegetables = random.randint(0, 5)
+    meat = random.randint(0, 7)
+    dairy = random.randint(0, 7)
+    food_access = random.randint(1, 5)
+    supplements = random.choice(["yes", "no"])
+
+    iron, b12, zinc = calculate_risk(
+        age, vegetables, meat, dairy, food_access, supplements
+    )
+
     return {
-        "Iron Deficiency": iron_risk,
-        "Vitamin B12 Deficiency": b12_risk,
-        "Zinc Deficiency": zinc_risk
+        "age": age,
+        "vegetables_per_day": vegetables,
+        "meat_per_week": meat,
+        "dairy_per_week": dairy,
+        "food_access": food_access,
+        "supplements": supplements,
+        "iron_score": iron,
+        "iron_risk": get_risk_label(iron),
+        "b12_score": b12,
+        "b12_risk": get_risk_label(b12),
+        "zinc_score": zinc,
+        "zinc_risk": get_risk_label(zinc)
     }
 
 
-def generate_recommendations(results):
-    recommendations = {}
+def generate_population(size):
+    population = []
 
-    for nutrient, score in results.items():
-        label = get_risk_label(score)
+    for _ in range(size):
+        person = generate_person()
+        population.append(person)
 
-        if nutrient == "Iron Deficiency":
-            if label == "High":
-                recommendations[nutrient] = "Increase iron-rich foods such as beans, spinach, fortified cereals, lean meats, and pair plant iron with vitamin C foods."
-            elif label == "Moderate":
-                recommendations[nutrient] = "Monitor iron intake and add more iron-rich meals during the week."
-            else:
-                recommendations[nutrient] = "Current estimated iron risk is low."
-
-        elif nutrient == "Vitamin B12 Deficiency":
-            if label == "High":
-                recommendations[nutrient] = "Consider more B12 sources such as eggs, dairy, fish, meat, fortified foods, or speak with a healthcare professional about supplementation."
-            elif label == "Moderate":
-                recommendations[nutrient] = "Monitor B12 intake, especially if animal-source foods are limited."
-            else:
-                recommendations[nutrient] = "Current estimated B12 risk is low."
-
-        elif nutrient == "Zinc Deficiency":
-            if label == "High":
-                recommendations[nutrient] = "Increase zinc-rich foods such as meat, beans, nuts, seeds, whole grains, and fortified cereals."
-            elif label == "Moderate":
-                recommendations[nutrient] = "Add more zinc-containing foods throughout the week."
-            else:
-                recommendations[nutrient] = "Current estimated zinc risk is low."
-
-    return recommendations
+    return population
 
 
-def save_report(results, recommendations):
-    with open("nutrient_report.txt", "w") as file:
-        file.write("HOPEResearch Nutrient Risk Report\n")
-        file.write("---------------------------------\n\n")
+def save_population_csv(population):
+    with open("synthetic_population.csv", "w", newline="") as file:
+        fieldnames = [
+            "age",
+            "vegetables_per_day",
+            "meat_per_week",
+            "dairy_per_week",
+            "food_access",
+            "supplements",
+            "iron_score",
+            "iron_risk",
+            "b12_score",
+            "b12_risk",
+            "zinc_score",
+            "zinc_risk"
+        ]
 
-        for nutrient, score in results.items():
-            label = get_risk_label(score)
-            file.write(f"{nutrient}: {score} ({label} Risk)\n")
-            file.write(f"Recommendation: {recommendations[nutrient]}\n\n")
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(population)
 
 
-def save_csv(results):
-    with open("risk_results.csv", "w") as file:
-        file.write("nutrient,score,risk_level\n")
+def count_high_risk(population, nutrient):
+    risk_key = nutrient + "_risk"
+    count = 0
 
-        for nutrient, score in results.items():
-            label = get_risk_label(score)
-            file.write(f"{nutrient},{score},{label}\n")
+    for person in population:
+        if person[risk_key] == "High":
+            count += 1
+
+    return count
 
 
-print("HOPEResearch Nutrient Risk Predictor")
-print("-----------------------------------")
+population_size = 1000
+population = generate_population(population_size)
 
-age = int(input("Age: "))
-vegetables = int(input("Vegetable servings per day: "))
-meat = int(input("Meat servings per week: "))
-dairy = int(input("Dairy servings per week: "))
-food_access = int(input("Food access score from 1 to 5, where 1 is very limited and 5 is strong: "))
-supplements = input("Do you take vitamins or supplements? yes/no: ").strip().lower()
+save_population_csv(population)
 
-results = calculate_risk(age, vegetables, meat, dairy, food_access, supplements)
-recommendations = generate_recommendations(results)
+iron_high = count_high_risk(population, "iron")
+b12_high = count_high_risk(population, "b12")
+zinc_high = count_high_risk(population, "zinc")
 
-print("\nEstimated Risk Scores")
-
-for nutrient, score in results.items():
-    label = get_risk_label(score)
-    print(f"{nutrient}: {score} ({label} Risk)")
-    print(f"Recommendation: {recommendations[nutrient]}\n")
-
-save_report(results, recommendations)
-save_csv(results)
-
-print("Report saved to nutrient_report.txt")
-print("CSV saved to risk_results.csv")
+print("HOPEResearch Synthetic Population Analysis")
+print("-----------------------------------------")
+print("Population size:", population_size)
+print("High Iron Risk:", iron_high)
+print("High Vitamin B12 Risk:", b12_high)
+print("High Zinc Risk:", zinc_high)
+print("\nDataset saved to synthetic_population.csv")
