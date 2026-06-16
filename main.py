@@ -96,6 +96,24 @@ def generate_interventions(risks):
     return interventions
 
 
+def apply_risk_analysis(data):
+    risk_results = data.apply(
+        lambda row: pd.Series(
+            calculate_risks(
+                row["age"],
+                row["vegetables_per_day"],
+                row["meat_per_week"],
+                row["dairy_per_week"],
+                row["food_access"],
+                row["supplements"],
+            )
+        ),
+        axis=1,
+    )
+
+    return pd.concat([data, risk_results], axis=1)
+
+
 def generate_person():
     age = random.randint(5, 18)
     vegetables = random.randint(0, 5)
@@ -133,21 +151,7 @@ def analyze_survey_data():
     filename = input("Enter survey CSV filename: ")
     data = pd.read_csv(filename)
 
-    risk_results = data.apply(
-        lambda row: pd.Series(
-            calculate_risks(
-                row["age"],
-                row["vegetables_per_day"],
-                row["meat_per_week"],
-                row["dairy_per_week"],
-                row["food_access"],
-                row["supplements"],
-            )
-        ),
-        axis=1,
-    )
-
-    final_data = pd.concat([data, risk_results], axis=1)
+    final_data = apply_risk_analysis(data)
     final_data.to_csv("analyzed_survey_results.csv", index=False)
 
     print("Survey responses analyzed:", len(final_data))
@@ -320,6 +324,54 @@ def generate_community_health_report():
     print(f"Community health report saved to {report_filename}")
 
 
+def track_intervention_impact():
+    before_file = input("Enter before-intervention CSV filename: ")
+    after_file = input("Enter after-intervention CSV filename: ")
+
+    before_data = apply_risk_analysis(pd.read_csv(before_file))
+    after_data = apply_risk_analysis(pd.read_csv(after_file))
+
+    report_file = "intervention_impact_report.txt"
+
+    with open(report_file, "w") as file:
+        file.write("HOPEResearch Intervention Impact Report\n")
+        file.write("--------------------------------------\n\n")
+        file.write(f"Before survey size: {len(before_data)}\n")
+        file.write(f"After survey size: {len(after_data)}\n\n")
+        file.write("Important Disclaimer:\n")
+        file.write("This is an educational impact-tracking prototype, not a clinical outcome study.\n\n")
+
+        print("\nHOPEResearch Intervention Impact Report")
+        print("--------------------------------------")
+
+        for nutrient in ["iron", "b12", "zinc"]:
+            before_high = (before_data[f"{nutrient}_risk"] == "High").sum()
+            after_high = (after_data[f"{nutrient}_risk"] == "High").sum()
+
+            before_percent = round((before_high / len(before_data)) * 100, 1)
+            after_percent = round((after_high / len(after_data)) * 100, 1)
+            change = round(before_percent - after_percent, 1)
+
+            print(f"\n{nutrient.upper()} High-Risk Change")
+            print("Before:", before_high, f"({before_percent}%)")
+            print("After:", after_high, f"({after_percent}%)")
+            print("Reduction:", change, "percentage points")
+
+            file.write(f"{nutrient.upper()} High-Risk Change\n")
+            file.write(f"Before: {before_high} ({before_percent}%)\n")
+            file.write(f"After: {after_high} ({after_percent}%)\n")
+            file.write(f"Reduction: {change} percentage points\n")
+
+            if change > 0:
+                file.write("Interpretation: Estimated high-risk prevalence decreased after intervention.\n\n")
+            elif change == 0:
+                file.write("Interpretation: No estimated change detected.\n\n")
+            else:
+                file.write("Interpretation: Estimated high-risk prevalence increased; intervention strategy should be reviewed.\n\n")
+
+    print(f"\nImpact report saved to {report_file}")
+
+
 def main():
     while True:
         print("\nHOPEResearch Platform")
@@ -332,7 +384,8 @@ def main():
         print("6. Generate community intervention plan")
         print("7. Generate community health report")
         print("8. Age-group demographic analysis")
-        print("9. Exit")
+        print("9. Track intervention impact")
+        print("10. Exit")
 
         choice = input("Choose an option: ")
 
@@ -353,6 +406,8 @@ def main():
         elif choice == "8":
             demographic_analysis()
         elif choice == "9":
+            track_intervention_impact()
+        elif choice == "10":
             print("Exiting HOPEResearch Platform.")
             break
         else:

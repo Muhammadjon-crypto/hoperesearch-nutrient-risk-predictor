@@ -1,0 +1,6 @@
+student_id,age,vegetables_per_day,meat_per_week,dairy_per_week,food_access,supplements
+1,10,1,0,1,2,0
+2,12,2,1,1,2,0
+3,15,3,2,3,3,1
+4,8,1,0,0,1,0
+5,17,5,4,5,5,1
