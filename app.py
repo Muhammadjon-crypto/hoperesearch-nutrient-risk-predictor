@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+import plotly.express as px
 
 st.set_page_config(
     page_title="HopeResearch",
@@ -258,7 +258,30 @@ if uploaded_file:
 
     with chart_col1:
         st.markdown("#### Iron")
-        st.bar_chart(final_data["iron_risk"].value_counts())
+
+        iron_counts = final_data["iron_risk"].value_counts().reset_index()
+        iron_counts.columns = ["Risk", "Count"]
+
+        fig = px.bar(
+            iron_counts,
+            x="Risk",
+            y="Count",
+            color="Risk",
+            color_discrete_map={
+                "High": "#22c55e",
+                "Moderate": "#84cc16",
+                "Low": "#14532d"
+            },
+            title="Iron Risk Distribution"
+        )
+
+        fig.update_layout(
+            paper_bgcolor="#050807",
+            plot_bgcolor="#050807",
+            font_color="white"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 
     with chart_col2:
         st.markdown("#### Vitamin B12")
@@ -268,7 +291,10 @@ if uploaded_file:
         st.markdown("#### Zinc")
         st.bar_chart(final_data["zinc_risk"].value_counts())
 
-    st.markdown('<div class="section-title">Age Group High-Risk Analysis</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Age Group High-Risk Analysis</div>',
+        unsafe_allow_html=True
+    )
 
     age_col1, age_col2, age_col3 = st.columns(3)
 
@@ -287,7 +313,10 @@ if uploaded_file:
         zinc_age = final_data[final_data["zinc_risk"] == "High"]["age_group"].value_counts()
         st.bar_chart(zinc_age)
 
-    st.markdown('<div class="section-title">Community Recommendations</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-title">Community Recommendations</div>',
+        unsafe_allow_html=True
+    )
 
     if iron_high_percent >= 20:
         st.warning("Iron risk is elevated. Prioritize iron-focused nutrition education and food-support interventions.")
@@ -303,6 +332,65 @@ if uploaded_file:
         st.warning("Zinc risk is elevated. Consider zinc-rich food education and outreach materials.")
     else:
         st.success("Zinc risk is not currently the highest priority based on this dataset.")
+
+    st.markdown('<div class="section-title">Intervention Simulator</div>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="small-note">Estimate how outreach interventions could reduce high-risk prevalence.</div>',
+        unsafe_allow_html=True
+    )
+
+    sim_col1, sim_col2, sim_col3 = st.columns(3)
+
+    with sim_col1:
+        iron_reduction = st.slider("Projected iron risk reduction (%)", 0, 50, 10)
+
+    with sim_col2:
+        b12_reduction = st.slider("Projected B12 risk reduction (%)", 0, 50, 10)
+
+    with sim_col3:
+        zinc_reduction = st.slider("Projected zinc risk reduction (%)", 0, 50, 10)
+
+    projected_iron = max(0, round(iron_high_percent - iron_reduction, 1))
+    projected_b12 = max(0, round(b12_high_percent - b12_reduction, 1))
+    projected_zinc = max(0, round(zinc_high_percent - zinc_reduction, 1))
+
+    st.markdown("### Projected Post-Intervention Risk")
+
+    proj_col1, proj_col2, proj_col3 = st.columns(3)
+
+    with proj_col1:
+        st.metric("Projected iron high risk", f"{projected_iron}%", f"-{iron_reduction}%")
+
+    with proj_col2:
+        st.metric("Projected B12 high risk", f"{projected_b12}%", f"-{b12_reduction}%")
+
+    with proj_col3:
+        st.metric("Projected zinc high risk", f"{projected_zinc}%", f"-{zinc_reduction}%")
+
+    intervention_summary = f"""
+HopeResearch Intervention Simulation
+
+Current High-Risk Prevalence:
+Iron: {iron_high_percent}%
+Vitamin B12: {b12_high_percent}%
+Zinc: {zinc_high_percent}%
+
+Projected Post-Intervention High-Risk Prevalence:
+Iron: {projected_iron}%
+Vitamin B12: {projected_b12}%
+Zinc: {projected_zinc}%
+
+Disclaimer:
+This is a planning simulation, not a clinical prediction.
+"""
+
+    st.download_button(
+        label="Download intervention simulation",
+        data=intervention_summary,
+        file_name="intervention_simulation.txt",
+        mime="text/plain"
+    )
 
     st.markdown(
         '<div class="small-note">Disclaimer: This is an educational screening prototype, not a diagnostic medical tool.</div>',
