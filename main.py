@@ -1,6 +1,7 @@
 import csv
 import random
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
@@ -372,6 +373,46 @@ def track_intervention_impact():
     print(f"\nImpact report saved to {report_file}")
 
 
+def visualize_intervention_impact():
+    before_file = input("Enter before-intervention CSV filename: ")
+    after_file = input("Enter after-intervention CSV filename: ")
+
+    before_data = apply_risk_analysis(pd.read_csv(before_file))
+    after_data = apply_risk_analysis(pd.read_csv(after_file))
+
+    nutrients = ["iron", "b12", "zinc"]
+    before_percentages = []
+    after_percentages = []
+
+    for nutrient in nutrients:
+        before_high = (before_data[f"{nutrient}_risk"] == "High").sum()
+        after_high = (after_data[f"{nutrient}_risk"] == "High").sum()
+
+        before_percent = (before_high / len(before_data)) * 100
+        after_percent = (after_high / len(after_data)) * 100
+
+        before_percentages.append(before_percent)
+        after_percentages.append(after_percent)
+
+    x_positions = range(len(nutrients))
+    bar_width = 0.35
+
+    before_positions = [x - bar_width / 2 for x in x_positions]
+    after_positions = [x + bar_width / 2 for x in x_positions]
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(before_positions, before_percentages, width=bar_width, label="Before")
+    plt.bar(after_positions, after_percentages, width=bar_width, label="After")
+    plt.xticks(list(x_positions), [nutrient.upper() for nutrient in nutrients])
+    plt.ylabel("High-Risk Percentage")
+    plt.title("Before vs After Nutrient Risk")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("intervention_impact_plot.png")
+
+    print("Intervention impact plot saved to intervention_impact_plot.png")
+
+
 def main():
     while True:
         print("\nHOPEResearch Platform")
@@ -385,7 +426,8 @@ def main():
         print("7. Generate community health report")
         print("8. Age-group demographic analysis")
         print("9. Track intervention impact")
-        print("10. Exit")
+        print("10. Visualize intervention impact")
+        print("11. Exit")
 
         choice = input("Choose an option: ")
 
@@ -408,6 +450,8 @@ def main():
         elif choice == "9":
             track_intervention_impact()
         elif choice == "10":
+            visualize_intervention_impact()
+        elif choice == "11":
             print("Exiting HOPEResearch Platform.")
             break
         else:
