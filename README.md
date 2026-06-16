@@ -24,7 +24,7 @@ def calculate_risk(age, vegetables, meat, dairy):
     }
 
 
-print("HOPEResearch Nutrient Risk Predictor")
+print("HopeResearch Nutrient Risk Predictor")
 print("-----------------------------------")
 
 age = int(input("Age: "))

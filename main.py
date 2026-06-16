@@ -168,7 +168,7 @@ def community_dashboard():
     filename = input("Enter analyzed CSV filename: ")
     data = pd.read_csv(filename)
 
-    print("\nHOPEResearch Community Dashboard")
+    print("\nHopeResearch Community Dashboard")
     print("--------------------------------")
     print("Population size:", len(data))
 
@@ -181,7 +181,7 @@ def demographic_analysis():
     filename = input("Enter analyzed CSV filename: ")
     data = pd.read_csv(filename)
 
-    print("\nHOPEResearch Age-Group Risk Analysis")
+    print("\nHopeResearch Age-Group Risk Analysis")
     print("-----------------------------------")
 
     for nutrient in ["iron", "b12", "zinc"]:
@@ -265,7 +265,7 @@ def generate_community_intervention_plan():
     filename = input("Enter analyzed CSV filename: ")
     data = pd.read_csv(filename)
 
-    print("\nHOPEResearch Community Intervention Plan")
+    print("\nHopeResearch Community Intervention Plan")
     print("----------------------------------------")
 
     for nutrient in ["iron", "b12", "zinc"]:
@@ -291,7 +291,7 @@ def generate_community_health_report():
     report_filename = "community_health_report.txt"
 
     with open(report_filename, "w") as file:
-        file.write("HOPEResearch Community Health Report\n")
+        file.write("HopeResearch Community Health Report\n")
         file.write("-----------------------------------\n\n")
         file.write(f"Population analyzed: {len(data)}\n\n")
         file.write("Important Disclaimer:\n")
@@ -335,14 +335,14 @@ def track_intervention_impact():
     report_file = "intervention_impact_report.txt"
 
     with open(report_file, "w") as file:
-        file.write("HOPEResearch Intervention Impact Report\n")
+        file.write("HopeResearch Intervention Impact Report\n")
         file.write("--------------------------------------\n\n")
         file.write(f"Before survey size: {len(before_data)}\n")
         file.write(f"After survey size: {len(after_data)}\n\n")
         file.write("Important Disclaimer:\n")
         file.write("This is an educational impact-tracking prototype, not a clinical outcome study.\n\n")
 
-        print("\nHOPEResearch Intervention Impact Report")
+        print("\nHopeResearch Intervention Impact Report")
         print("--------------------------------------")
 
         for nutrient in ["iron", "b12", "zinc"]:
@@ -415,7 +415,7 @@ def visualize_intervention_impact():
 
 def main():
     while True:
-        print("\nHOPEResearch Platform")
+        print("\nHopeResearch Platform")
         print("---------------------")
         print("1. Analyze survey data")
         print("2. Generate synthetic population")
@@ -452,7 +452,7 @@ def main():
         elif choice == "10":
             visualize_intervention_impact()
         elif choice == "11":
-            print("Exiting HOPEResearch Platform.")
+            print("Exiting HopeResearch Platform.")
             break
         else:
             print("Invalid option.")

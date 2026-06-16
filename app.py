@@ -3,7 +3,7 @@ import pandas as pd
 
 
 st.set_page_config(
-    page_title="HOPEResearch",
+    page_title="HopeResearch",
     page_icon="🧬",
     layout="wide"
 )
@@ -168,7 +168,7 @@ st.markdown(
     """
     <div class="hero">
         <div class="tag">AI-assisted public health analytics</div>
-        <div class="hero-title">HOPEResearch Nutrient Risk Platform</div>
+        <div class="hero-title">HopeResearch Nutrient Risk Platform</div>
         <div class="hero-subtitle">
             A community nutrition analytics tool designed to estimate micronutrient risk patterns,
             identify vulnerable groups, and support data-driven outreach for underserved communities.
