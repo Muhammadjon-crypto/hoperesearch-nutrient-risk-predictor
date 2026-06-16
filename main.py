@@ -15,6 +15,17 @@ def get_risk_label(score):
         return "Low"
 
 
+def get_age_group(age):
+    if age <= 8:
+        return "5-8"
+    elif age <= 12:
+        return "9-12"
+    elif age <= 15:
+        return "13-15"
+    else:
+        return "16-18"
+
+
 def calculate_scores(age, vegetables, meat, dairy, food_access, supplements):
     iron_score = 0
     b12_score = 0
@@ -54,6 +65,7 @@ def calculate_risks(age, vegetables, meat, dairy, food_access, supplements):
     )
 
     return {
+        "age_group": get_age_group(age),
         "iron_risk": get_risk_label(iron_score),
         "b12_risk": get_risk_label(b12_score),
         "zinc_risk": get_risk_label(zinc_score),
@@ -160,6 +172,31 @@ def community_dashboard():
         print(data[f"{nutrient}_risk"].value_counts())
 
 
+def demographic_analysis():
+    filename = input("Enter analyzed CSV filename: ")
+    data = pd.read_csv(filename)
+
+    print("\nHOPEResearch Age-Group Risk Analysis")
+    print("-----------------------------------")
+
+    for nutrient in ["iron", "b12", "zinc"]:
+        print(f"\n{nutrient.upper()} High-Risk Count by Age Group:")
+
+        high_risk_data = data[data[f"{nutrient}_risk"] == "High"]
+        age_group_counts = high_risk_data["age_group"].value_counts().sort_index()
+
+        if age_group_counts.empty:
+            print("No high-risk individuals detected.")
+        else:
+            print(age_group_counts)
+
+    data.groupby("age_group")[["iron_risk", "b12_risk", "zinc_risk"]].value_counts().to_csv(
+        "age_group_risk_analysis.csv"
+    )
+
+    print("\nAge-group analysis saved to age_group_risk_analysis.csv")
+
+
 def train_ml_models():
     filename = input("Enter analyzed CSV filename: ")
     data = pd.read_csv(filename)
@@ -206,6 +243,7 @@ def predict_individual_risk():
 
     print("\nIndividual Nutrient Risk Prediction")
     print("-----------------------------------")
+    print("Age Group:", risks["age_group"])
     print("Iron Risk:", risks["iron_risk"])
     print("Vitamin B12 Risk:", risks["b12_risk"])
     print("Zinc Risk:", risks["zinc_risk"])
@@ -293,7 +331,8 @@ def main():
         print("5. Predict individual nutrient risk")
         print("6. Generate community intervention plan")
         print("7. Generate community health report")
-        print("8. Exit")
+        print("8. Age-group demographic analysis")
+        print("9. Exit")
 
         choice = input("Choose an option: ")
 
@@ -312,6 +351,8 @@ def main():
         elif choice == "7":
             generate_community_health_report()
         elif choice == "8":
+            demographic_analysis()
+        elif choice == "9":
             print("Exiting HOPEResearch Platform.")
             break
         else:
